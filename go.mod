@@ -1,6 +1,6 @@
 module github.com/jbirtley88/gremel
 
-go 1.24.4
+go 1.23
 
 require (
 	github.com/spf13/viper v1.20.1
