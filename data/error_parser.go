@@ -22,18 +22,6 @@ func (p *ParserError) GetHeadings(rows []map[string]any) []string {
 	return nil // No headings for error parser
 }
 
-func (p *ParserError) Select(rows []map[string]any) ([]map[string]any, error) {
-	return nil, p.Err // No selection for error parser
-}
-
-func (p *ParserError) Where(rows []map[string]any) ([]map[string]any, error) {
-	return nil, p.Err // No filtering for error parser
-}
-
-func (p *ParserError) Order(rows []map[string]any) ([]map[string]any, error) {
-	return nil, p.Err // No ordering for error parser
-}
-
 func (p *ParserError) Parse(input io.Reader) ([]map[string]any, []string, error) {
 	return nil, nil, p.Err
 }

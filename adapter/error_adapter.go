@@ -1,8 +1,7 @@
-package data
+package adapter
 
 import (
 	"fmt"
-	"io"
 )
 
 // ErrorAdapter is what gets returned by the adpater registry if there is any
@@ -32,11 +31,8 @@ func (a *ErrorAdapter) GetName() string {
 	return fmt.Sprintf("ERROR: %v", a.Err)
 }
 
-func (a *ErrorAdapter) Fetch() error {
-	return fmt.Errorf("Fetch(): %v", a.Err)
-}
-
-func (a *ErrorAdapter) ResponseString(content []byte, writeTo io.Writer) error {
-	_, err := writeTo.Write([]byte(a.Err.Error()))
-	return err
+func (a *ErrorAdapter) Load() ([]map[string]any, []string, error) {
+	// The BaseAdapter does nothing by default.
+	// Subclasses should override this method to implement specific loading logic.
+	return nil, nil, a.Err
 }
