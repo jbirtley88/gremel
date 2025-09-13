@@ -26,23 +26,14 @@ Gremel is still very much a work-in-progress.  One part of it that is fairly mat
 # Parsing your own structured data
 Compose from the `BaseParser` in `data/base_parser.go` and:
 
-    - implement the `Parse()` method to convert your input data (an `io.Reader` into a `[]map[string]any`).
+    - implement the `Parse()` method to convert your input data (an `io.Reader` into a `[]data.Row`).
 
     - implement the `GetHeaders()` method to return the names of the columns you'll be dealing with
 
-Each entry in the `[]map[string]any` is conceptually the same as a SQL `Row`.
+Each entry in the `[]data.Row` is conceptually the same as a SQL `Row`.
 
-The default `BaseSelector` in `helper/selector.go` will then operate quite happily on the `[]map[string]any`:
 
-    - `Select(needle string, haystack []map[string]any) ([]map[string]any, error)`
-
-    - `Where(rows []map[string]any, whereClause string) ([]map[string]any, error)`
-
-    - `Order(input []map[string]any, by string) ([]map[string]any, error)`
-
-The `BaseSelector` implementation of `Where()` delegates row matching to the `conditions` package.
-
-# Conditions Package
+# Conditions Package (Deprecated)
 The `conditions` package evaluates expressions to a `true` or `false` value.  Conceptually (and syntactically) similar to what you'd find in a `WHERE` clause in SQL.
 
 It supports variable expansion, and nested / parenthesised expressions
