@@ -77,6 +77,7 @@ func (db *SQLiteGremelDB) getCreateTableSQL(tableName string, row data.Row) (str
 	sqlLines := make([]string, 0)
 
 	// Handle empty row case
+	sqlLines = append(sqlLines, fmt.Sprintf("DROP TABLE IF EXISTS %s;", tableName))
 	if len(row) == 0 {
 		sqlLines = append(sqlLines, fmt.Sprintf("CREATE TABLE %s (", tableName))
 		sqlLines = append(sqlLines, "    _placeholder INTEGER") // Add a placeholder column for empty tables

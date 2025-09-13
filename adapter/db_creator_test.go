@@ -16,19 +16,19 @@ func TestCreateDBFromJSON(t *testing.T) {
 	// Step 1: fire up the DB
 	ctx := data.NewGremelContext(context.Background())
 	database := db.GetGremelDB()
-	err := CreateDBFromFile(ctx, database, "accounts_json", "../test_resources/accounts_nested.json")
+	err := CreateDBFromFile(ctx, database, "accounts", "../test_resources/accounts_nested.json")
 	if err != nil {
-		t.Fatalf("failed to create 'accounts_json' table in DB: %v", err)
+		t.Fatalf("failed to create 'accounts' table in DB: %v", err)
 	}
-	err = CreateDBFromFile(ctx, database, "people_json", "../test_resources/people.json")
+	err = CreateDBFromFile(ctx, database, "people", "../test_resources/people.json")
 	if err != nil {
-		t.Fatalf("failed to create 'people_json' table in DB: %v", err)
+		t.Fatalf("failed to create 'people' table in DB: %v", err)
 	}
 
 	// Step 2: populate the data
 	sourceNames := []string{
-		"accounts_json",
-		"people_json",
+		"accounts",
+		"people",
 	}
 	for _, src := range sourceNames {
 		filename := strings.Split(src, "_")[0] + ".json"
@@ -54,14 +54,14 @@ func TestCreateDBFromCSV(t *testing.T) {
 	// Step 1: fire up the DB
 	ctx := data.NewGremelContext(context.Background())
 	database := db.GetGremelDB()
-	err := CreateDBFromFile(ctx, database, "accounts_csv", "../test_resources/accounts.csv")
+	err := CreateDBFromFile(ctx, database, "accounts", "../test_resources/accounts.csv")
 	if err != nil {
-		t.Fatalf("failed to create 'accounts_csv' table in DB: %v", err)
+		t.Fatalf("failed to create 'accounts' table in DB: %v", err)
 	}
 
 	// Step 2: populate the data
 	sourceNames := []string{
-		"accounts_csv",
+		"accounts",
 	}
 	for _, src := range sourceNames {
 		filename := strings.Split(src, "_")[0] + ".csv"
@@ -88,14 +88,14 @@ func TestCreateDBFromExcelSingleSheet(t *testing.T) {
 	ctx := data.NewGremelContext(context.Background())
 	ctx.Values().SetValue("excel.sheetname", "Sheet1")
 	database := db.GetGremelDB()
-	err := CreateDBFromFile(ctx, database, "accounts_excel", "../test_resources/accounts.xlsx")
+	err := CreateDBFromFile(ctx, database, "accounts", "../test_resources/accounts.xlsx")
 	if err != nil {
-		t.Fatalf("failed to create 'accounts_excel' table in DB: %v", err)
+		t.Fatalf("failed to create 'accounts' table in DB: %v", err)
 	}
 
 	// Step 2: populate the data
 	sourceNames := []string{
-		"accounts_excel",
+		"accounts",
 	}
 	for _, src := range sourceNames {
 		filename := strings.Split(src, "_")[0] + ".xlsx"
