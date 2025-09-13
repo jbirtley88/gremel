@@ -49,11 +49,11 @@ def random_datetime():
 
 def random_size():
     # Most GETs are small (<5kb), POST/PUT/DELETE can be larger
-    return random.randint(250, 5000) if random.random() < 0.7 else random.randint(5000, 100000)
+    return random.randint(10, 1000) if random.random() < 0.7 else random.randint(2000, 3000)
 
 def random_latency():
     # In milliseconds, simulating server timings
-    return round(random.uniform(0.1, 2.0), 3)
+    return int(round(random.uniform(0.1, 2.0), 3)*1000)
 
 def generate_log_line():
     ip = random_ip()

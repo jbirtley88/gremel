@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"regexp"
 
 	"github.com/jbirtley88/gremel/data"
-	"github.com/jbirtley88/gremel/helper"
-	"github.com/xojoc/logparse"
+	"github.com/jbirtley88/gremel/logparse"
 )
 
 // GenericLogParser is a blunt but effective instrument
@@ -58,20 +56,11 @@ func (p *GenericLogParser) parseCLF(input io.Reader) (*data.RowList, error) {
 	// buf := make([]byte, maxCapacity)
 	// scanner.Buffer(buf, maxCapacity)
 	for scanner.Scan() {
-		entry, err := logparse.Common(scanner.Text())
+		row, err := logparse.ParseCLFLine(scanner.Text())
 		if err != nil {
 			log.Printf("Parse(%s): error parsing log entry: %v", p.GetName(), err)
 			continue
 		}
-		// COnvert the parsed entry into a data.Row
-		row := make(data.Row)
-		row["host"] = entry.Host
-		row["ident"] = "-"
-		row["user"] = entry.User
-		row["time"] = entry.Time
-		row["request"] = entry.Request
-		row["status"] = entry.Status
-		row["bytes"] = entry.Bytes
 		rows = append(rows, row)
 	}
 
@@ -90,22 +79,11 @@ func (p *GenericLogParser) parseCombined(input io.Reader) (*data.RowList, error)
 	// buf := make([]byte, maxCapacity)
 	// scanner.Buffer(buf, maxCapacity)
 	for scanner.Scan() {
-		entry, err := logparse.Common(scanner.Text())
+		row, err := logparse.ParseCombinedLogLine(scanner.Text())
 		if err != nil {
 			log.Printf("Parse(%s): error parsing log entry: %v", p.GetName(), err)
 			continue
 		}
-		// COnvert the parsed entry into a data.Row
-		row := make(data.Row)
-		row["host"] = entry.Host
-		row["ident"] = "-"
-		row["user"] = entry.User
-		row["time"] = entry.Time
-		row["request"] = entry.Request
-		row["status"] = entry.Status
-		row["bytes"] = entry.Bytes
-		row["referer"] = entry.Referer
-		row["useragent"] = entry.UserAgent
 		rows = append(rows, row)
 	}
 
@@ -115,15 +93,11 @@ func (p *GenericLogParser) parseCombined(input io.Reader) (*data.RowList, error)
 	return data.NewRowList(rows, p.GetHeadings(rows), nil), nil
 }
 
-var syslogRegex = regexp.MustCompile(
-	`^([0-9T:\.\+\-]+)\s+([0-9\.]+)\s+(\w+)\[(\d+)\]:\s+(.*)$`,
-)
-
 func (p *GenericLogParser) parseSyslog(input io.Reader) (*data.RowList, error) {
 	var rows []data.Row
 	scanner := bufio.NewScanner(input)
 	for scanner.Scan() {
-		row, err := helper.ParseSyslogLine(scanner.Text())
+		row, err := logparse.ParseSyslogLine(scanner.Text())
 		if err != nil {
 			log.Printf("Parse(%s): error parsing syslog line: %v", p.GetName(), err)
 			continue

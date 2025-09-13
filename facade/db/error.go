@@ -27,3 +27,7 @@ func (db *ErrorGremelDB) InsertRows(tableName string, rows []data.Row) error {
 func (db *ErrorGremelDB) Close() error {
 	return db.underlyingError
 }
+
+func (db *ErrorGremelDB) Query(sqlQuery string) ([]data.Row, error) {
+	return nil, db.underlyingError
+}

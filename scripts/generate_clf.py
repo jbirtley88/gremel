@@ -62,7 +62,7 @@ def random_size():
 
 def random_latency():
     # Latency in ms
-    return round(random.uniform(10, 900), 2)
+    return int(round(random.uniform(0.01, 2), 2)*1000)
 
 def generate_log_line():
     ip = random_ip()

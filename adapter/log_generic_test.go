@@ -22,7 +22,7 @@ func TestCLFGeneric(t *testing.T) {
 	p := NewGenericLogParser(ctx)
 	require.NotNil(t, p)
 
-	expectedHeadings := []string{"bytes", "host", "ident", "request", "status", "time", "user"}
+	expectedHeadings := []string{"authuser", "host", "ident", "latency", "method", "path", "proto", "size", "status", "time"}
 
 	rows, err := p.Parse(f)
 	require.Nil(t, err)
@@ -46,7 +46,7 @@ func TestCombinedGeneric(t *testing.T) {
 	p := NewGenericLogParser(ctx)
 	require.NotNil(t, p)
 
-	expectedHeadings := []string{"bytes", "host", "ident", "referer", "request", "status", "time", "user", "useragent"}
+	expectedHeadings := []string{"host", "ident", "latency", "referer", "request", "size", "status", "time", "user", "useragent"}
 
 	rows, err := p.Parse(f)
 	require.Nil(t, err)

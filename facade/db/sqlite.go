@@ -182,3 +182,55 @@ func (db *SQLiteGremelDB) InsertRows(tableName string, rows []data.Row) error {
 
 	return nil
 }
+
+func (db *SQLiteGremelDB) Query(sqlQuery string) ([]data.Row, error) {
+	rows, err := db.db.Query(sqlQuery)
+	if err != nil {
+		return nil, fmt.Errorf("Query(%s): failed to execute query: %w", sqlQuery, err)
+	}
+	defer rows.Close()
+
+	// Get column names
+	columns, err := rows.Columns()
+	if err != nil {
+		return nil, fmt.Errorf("Query(%s): failed to get columns: %w", sqlQuery, err)
+	}
+
+	var results []data.Row
+
+	for rows.Next() {
+		// Create a slice of interface{}'s to represent each column,
+		// and a second slice to contain pointers to each item in the columns slice.
+		columnValues := make([]interface{}, len(columns))
+		columnPointers := make([]interface{}, len(columns))
+		for i := range columnValues {
+			columnPointers[i] = &columnValues[i]
+		}
+
+		// Scan the result into the column pointers...
+		if err := rows.Scan(columnPointers...); err != nil {
+			return nil, fmt.Errorf("Query(%s): failed to scan row: %w", sqlQuery, err)
+		}
+
+		// Create a map and populate it with the column data
+		rowMap := make(data.Row)
+		for i, colName := range columns {
+			val := columnValues[i]
+
+			// Convert []byte to string for TEXT columns
+			if b, ok := val.([]byte); ok {
+				rowMap[colName] = string(b)
+			} else {
+				rowMap[colName] = val
+			}
+		}
+
+		results = append(results, rowMap)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("Query(%s): row iteration error: %w", sqlQuery, err)
+	}
+
+	return results, nil
+}

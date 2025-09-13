@@ -8,7 +8,6 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.32
 	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.10.0
-	github.com/xojoc/logparse v0.0.0-20200116210938-e2e713e9bde6
 	github.com/xuri/excelize/v2 v2.9.1
 )
 

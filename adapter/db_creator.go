@@ -10,7 +10,7 @@ import (
 	"github.com/jbirtley88/gremel/facade/db"
 )
 
-func CreateDBFromFile(ctx data.GremelContext, database db.GremelDB, tableName string, datafile string) error {
+func CreateTableFromFile(ctx data.GremelContext, database db.GremelDB, tableName string, datafile string) error {
 	// Step 1: Parse the underlying file into rows
 	var parser data.Parser
 	switch ext := filepath.Ext(datafile); ext {
@@ -21,6 +21,10 @@ func CreateDBFromFile(ctx data.GremelContext, database db.GremelDB, tableName st
 	case ".csv":
 		// Parse CSV file
 		parser = NewGenericCSVParser(ctx)
+
+	case ".log":
+		// Parse log file
+		parser = NewGenericLogParser(ctx)
 
 	case ".xlsx", ".xls":
 		// Parse Excel file
@@ -37,14 +41,14 @@ func CreateDBFromFile(ctx data.GremelContext, database db.GremelDB, tableName st
 	}
 	defer f.Close()
 
-	err = CreateDBFromReader(ctx, database, tableName, f, parser)
+	err = CreateTableFromReader(ctx, database, tableName, f, parser)
 	if err != nil {
 		return fmt.Errorf("CreateDB(%s): failed to create DB from reader: %w", datafile, err)
 	}
 	return nil
 }
 
-func CreateDBFromReader(ctx data.GremelContext, database db.GremelDB, tableName string, input io.Reader, parser data.Parser) error {
+func CreateTableFromReader(ctx data.GremelContext, database db.GremelDB, tableName string, input io.Reader, parser data.Parser) error {
 	rows, err := parser.Parse(input)
 	if err != nil {
 		return fmt.Errorf("CreateDBFromReader(%s): failed to parse data: %w", tableName, err)
