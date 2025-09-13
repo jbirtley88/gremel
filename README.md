@@ -32,10 +32,12 @@ As a simple example, imagine you've got 2 datasources:
 
 - `weblogs.log`
   An Apache combined logfile of web requests
+
   `192.168.143.149 - - [06/Sep/2025:03:46:43 +0100] "GET /api/v1/items HTTP/1.1" 301 1135 "https://docs.example.com/guide" "python-requests/2.31.0" 472`
 
 - `ipaddresses.csv`
   An CSV file containing IP address and datacenter
+  
   `ip,datacenter`
   `192.168.143.149 datacenter1`
 
