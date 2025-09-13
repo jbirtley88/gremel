@@ -114,3 +114,11 @@ The main differences are
     - Added float comparison with epsilon error tolerance.
     - Optimized long array `IN`/`CONTAINS` operator.
     - Removed redundant RWMutex for better performance.
+
+# Licences
+    Gremel uses the very permissive BSD-3-Clause licence.  There are zero restrictions on how you use it, other than you acknowledge using it (and please give it a star on github!)
+    https://github.com/xojoc/logparse (GPL 3.0)
+    https://github.com/oleksandr/conditions (MIT)
+    https://github.com/xojoc/logparse (GPL 3.0)
+    https://github.com/influxdata/go-syslog (MIT)
+

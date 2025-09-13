@@ -3,7 +3,6 @@ package adapter
 import (
 	"fmt"
 	"io"
-	"strconv"
 
 	"github.com/jbirtley88/gremel/data"
 	"github.com/xuri/excelize/v2"
@@ -60,26 +59,9 @@ func (p *GenericExcelParser) Parse(input io.Reader) (*data.RowList, error) {
 	for _, ssRow := range spreadsheetRows[1:] {
 		row := make(map[string]any)
 		for i, value := range ssRow {
-			row[headings[i]] = deriveValue(value)
+			row[headings[i]] = data.ParseValue(value)
 		}
 		rows = append(rows, row)
 	}
 	return data.NewRowList(rows, p.GetHeadings(rows), nil), nil
-}
-
-func deriveValue(value any) any {
-	// Try int
-	if v, err := strconv.ParseInt(fmt.Sprint(value), 10, 64); err == nil {
-		return v
-	}
-	// Try float
-	if v, err := strconv.ParseFloat(fmt.Sprint(value), 64); err == nil {
-		return v
-	}
-	// Try bool
-	if v, err := strconv.ParseBool(fmt.Sprint(value)); err == nil {
-		return v
-	}
-	// Default to string
-	return fmt.Sprint(value)
 }
