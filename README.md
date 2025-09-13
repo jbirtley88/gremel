@@ -42,7 +42,7 @@ As a simple example, imagine you've got 2 datasources:
 
   `192.168.143.149 datacenter1`
 
-Some of the web requests are showing high latency retrieving `/api/foo`, where "*high latency*" means "*more than 1000ms*".
+Some of the web requests are showing high latency retrieving `/api/foo`, where "*high latency*" means "*more than 2000ms*".
 
 You have a hunch that it might be related to cross-datacenter requests to a database, or it might be a single datacenter with the problem, so you need to see if the high latency is associated with particular datacenters.
 
