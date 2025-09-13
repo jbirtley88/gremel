@@ -1,4 +1,4 @@
-# Gremel - "Dremel" In Goo
+# Gremel - "Dremel" In Go
 Gremel is a utility for interrogating and extracting data from structured sources:
 
     - JSON
