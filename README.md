@@ -37,8 +37,9 @@ As a simple example, imagine you've got 2 datasources:
 
 - `ipaddresses.csv`
   An CSV file containing IP address and datacenter
-  
+
   `ip,datacenter`
+  
   `192.168.143.149 datacenter1`
 
 Some of the web requests are showing high latency retrieving `/api/foo`, where "*high latency*" means "*more than 1000ms*".
