@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/jbirtley88/gremel/data"
@@ -15,22 +16,23 @@ func TestCreateDBFromJSON(t *testing.T) {
 	// Step 1: fire up the DB
 	ctx := data.NewGremelContext(context.Background())
 	database := db.GetGremelDB()
-	err := CreateDBFromFile(ctx, database, "accounts", "../test_resources/accounts_nested.json")
+	err := CreateDBFromFile(ctx, database, "accounts_json", "../test_resources/accounts_nested.json")
 	if err != nil {
-		t.Fatalf("failed to create 'accounts' table in DB: %v", err)
+		t.Fatalf("failed to create 'accounts_json' table in DB: %v", err)
 	}
-	err = CreateDBFromFile(ctx, database, "people", "../test_resources/people.json")
+	err = CreateDBFromFile(ctx, database, "people_json", "../test_resources/people.json")
 	if err != nil {
-		t.Fatalf("failed to create 'people' table in DB: %v", err)
+		t.Fatalf("failed to create 'people_json' table in DB: %v", err)
 	}
 
 	// Step 2: populate the data
 	sourceNames := []string{
-		"accounts",
-		"people",
+		"accounts_json",
+		"people_json",
 	}
 	for _, src := range sourceNames {
-		f, err := os.Open(fmt.Sprintf("../test_resources/%s.json", src))
+		filename := strings.Split(src, "_")[0] + ".json"
+		f, err := os.Open(fmt.Sprintf("../test_resources/%s", filename))
 		require.Nil(t, err)
 		require.NotNil(t, f)
 		defer f.Close()
@@ -52,17 +54,18 @@ func TestCreateDBFromCSV(t *testing.T) {
 	// Step 1: fire up the DB
 	ctx := data.NewGremelContext(context.Background())
 	database := db.GetGremelDB()
-	err := CreateDBFromFile(ctx, database, "accounts", "../test_resources/accounts.csv")
+	err := CreateDBFromFile(ctx, database, "accounts_csv", "../test_resources/accounts.csv")
 	if err != nil {
-		t.Fatalf("failed to create 'accounts' table in DB: %v", err)
+		t.Fatalf("failed to create 'accounts_csv' table in DB: %v", err)
 	}
 
 	// Step 2: populate the data
 	sourceNames := []string{
-		"accounts",
+		"accounts_csv",
 	}
 	for _, src := range sourceNames {
-		f, err := os.Open(fmt.Sprintf("../test_resources/%s.csv", src))
+		filename := strings.Split(src, "_")[0] + ".csv"
+		f, err := os.Open(fmt.Sprintf("../test_resources/%s", filename))
 		require.Nil(t, err)
 		require.NotNil(t, f)
 		defer f.Close()
@@ -85,22 +88,23 @@ func TestCreateDBFromExcelSingleSheet(t *testing.T) {
 	ctx := data.NewGremelContext(context.Background())
 	ctx.Values().SetValue("excel.sheetname", "Sheet1")
 	database := db.GetGremelDB()
-	err := CreateDBFromFile(ctx, database, "accounts", "../test_resources/accounts.xlsx")
+	err := CreateDBFromFile(ctx, database, "accounts_excel", "../test_resources/accounts.xlsx")
 	if err != nil {
-		t.Fatalf("failed to create 'accounts' table in DB: %v", err)
+		t.Fatalf("failed to create 'accounts_excel' table in DB: %v", err)
 	}
 
 	// Step 2: populate the data
 	sourceNames := []string{
-		"accounts",
+		"accounts_excel",
 	}
 	for _, src := range sourceNames {
-		f, err := os.Open(fmt.Sprintf("../test_resources/%s.csv", src))
+		filename := strings.Split(src, "_")[0] + ".xlsx"
+		f, err := os.Open(fmt.Sprintf("../test_resources/%s", filename))
 		require.Nil(t, err)
 		require.NotNil(t, f)
 		defer f.Close()
 
-		p := NewGenericCSVParser(ctx)
+		p := NewGenericExcelParser(ctx)
 		rows, err := p.Parse(f)
 		require.Nil(t, err)
 		require.NotNil(t, rows)
