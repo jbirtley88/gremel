@@ -62,7 +62,7 @@ WHERE w.request LIKE  'GET /api/foo%'
 GROUP BY i.datacenter
 ORDER BY i.datacenter;
 
-datacenter   latency>1000
+datacenter   latency>2000
 ----------   ------------
 datacenter1           237
 datacenter2             0
