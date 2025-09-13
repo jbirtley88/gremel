@@ -39,12 +39,12 @@ As a simple example, imagine you've got 2 datasources:
   An CSV file containing IP address and datacenter
 
   `ip,datacenter`
-  
+
   `192.168.143.149 datacenter1`
 
 Some of the web requests are showing high latency retrieving `/api/foo`, where "*high latency*" means "*more than 1000ms*".
 
-You have a hunch that it might be related to cross-datacenter requests to a database, so you need to see if the high latency is associated with particular datacenters.
+You have a hunch that it might be related to cross-datacenter requests to a database, or it might be a single datacenter with the problem, so you need to see if the high latency is associated with particular datacenters.
 
 To try to do this by hand would be massively complicated and time-consuming, even if your scripting skills are God-tier.
 
@@ -54,10 +54,11 @@ Since Gremel allows you to treat structured files as SQLite tables, and uses SQL
 $ gremel weblogs.log ipaddresses.xlsx
 gremel> SELECT
   i.datacenter,
-  COUNT(DISTINCT CASE WHEN CAST(w.latency AS INTEGER) > 1000 THEN i.ip END) AS "latency>1000"
+  COUNT(DISTINCT CASE WHEN CAST(w.latency AS INTEGER) > 2000 THEN i.ip END) AS "latency>2000"
 FROM ipaddresses AS i
 LEFT JOIN weblogs AS w
   ON w.host = i.ip
+WHERE w.request LIKE  'GET /api/foo%'
 GROUP BY i.datacenter
 ORDER BY i.datacenter;
 

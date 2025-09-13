@@ -143,6 +143,7 @@ func TestGetHighLetencyDatacenter(t *testing.T) {
 FROM ipaddresses AS i
 LEFT JOIN weblogs AS w
   ON w.host = i.ip
+WHERE w.request LIKE  'GET /api/foo%'
 GROUP BY i.datacenter
 ORDER BY i.datacenter`
 	rows, err := database.Query(sqlQuery)
