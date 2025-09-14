@@ -9,7 +9,7 @@ Gremel is a utility for interrogating and extracting data from structured source
     - Excel spreadsheets
     - SQL databases
 
-Conceptually and functionally similar to Apache Drill.
+Conceptually and functionally similar to Apache Drill, but considerably more lightweight and simpler to extend the functionality to accommodate whatever exotic data sources you have.
 
 Currently in active development, but Gremel will enable you to do things like this:
 ```
