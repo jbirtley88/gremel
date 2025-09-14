@@ -17,11 +17,11 @@ func TestCreateTablesFromJSON(t *testing.T) {
 	// Step 1: fire up the DB
 	ctx := data.NewGremelContext(context.Background())
 	database := db.GetGremelDB()
-	err := CreateTableFromFile(ctx, database, "accounts", "../test_resources/accounts_nested.json")
+	err := CreateTableFromFile(ctx, database, "accounts", "json", "../test_resources/accounts_nested.json")
 	if err != nil {
 		t.Fatalf("failed to create 'accounts' table in DB: %v", err)
 	}
-	err = CreateTableFromFile(ctx, database, "people", "../test_resources/people.json")
+	err = CreateTableFromFile(ctx, database, "people", "json", "../test_resources/people.json")
 	if err != nil {
 		t.Fatalf("failed to create 'people' table in DB: %v", err)
 	}
@@ -55,7 +55,7 @@ func TestCreateTablesFromCSV(t *testing.T) {
 	// Step 1: fire up the DB
 	ctx := data.NewGremelContext(context.Background())
 	database := db.GetGremelDB()
-	err := CreateTableFromFile(ctx, database, "accounts", "../test_resources/accounts.csv")
+	err := CreateTableFromFile(ctx, database, "accounts", "csv", "../test_resources/accounts.csv")
 	if err != nil {
 		t.Fatalf("failed to create 'accounts' table in DB: %v", err)
 	}
@@ -89,7 +89,7 @@ func TestCreateTablesFromExcelSingleSheet(t *testing.T) {
 	ctx := data.NewGremelContext(context.Background())
 	ctx.Values().SetValue("excel.sheetname", "Sheet1")
 	database := db.GetGremelDB()
-	err := CreateTableFromFile(ctx, database, "accounts", "../test_resources/accounts.xlsx")
+	err := CreateTableFromFile(ctx, database, "accounts", "xlsx", "../test_resources/accounts.xlsx")
 	if err != nil {
 		t.Fatalf("failed to create 'accounts' table in DB: %v", err)
 	}
@@ -118,21 +118,21 @@ func TestCreateTablesFromExcelSingleSheet(t *testing.T) {
 	}
 }
 
-func TestGetHighLetencyDatacenter(t *testing.T) {
+func TestGetHighLatencyDatacenter(t *testing.T) {
 	// Step 1: fire up the DB
 	ctx := data.NewGremelContext(context.Background())
 	database := db.GetGremelDB()
 
 	// Step 2: create the 'weblogs' table from the logfile
-	ctx.Values().SetValue("log.format", "combined")
-	err := CreateTableFromFile(ctx, database, "weblogs", "../test_resources/weblogs.log")
+	// ctx.Values().SetValue("log.format", "combined")
+	err := CreateTableFromFile(ctx, database, "weblogs", "log", "../test_resources/weblogs.log")
 	if err != nil {
 		t.Fatalf("failed to create 'weblogs' table in DB: %v", err)
 	}
 
 	// Step 3: create the 'ipaddresses' table from the excel spreadsheet
 	ctx.Values().SetValue("excel.sheetname", "ipaddresses")
-	err = CreateTableFromFile(ctx, database, "ipaddresses", "../test_resources/ipaddresses.xlsx")
+	err = CreateTableFromFile(ctx, database, "ipaddresses", "xlsx", "../test_resources/ipaddresses.xlsx")
 	if err != nil {
 		t.Fatalf("failed to create 'ipaddresses' table in DB: %v", err)
 	}

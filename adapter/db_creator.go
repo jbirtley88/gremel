@@ -4,34 +4,33 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 
 	"github.com/jbirtley88/gremel/data"
 	"github.com/jbirtley88/gremel/facade/db"
 )
 
-func CreateTableFromFile(ctx data.GremelContext, database db.GremelDB, tableName string, datafile string) error {
+func CreateTableFromFile(ctx data.GremelContext, database db.GremelDB, tableName string, fileType string, datafile string) error {
 	// Step 1: Parse the underlying file into rows
 	var parser data.Parser
-	switch ext := filepath.Ext(datafile); ext {
-	case ".json":
+	switch fileType {
+	case "json":
 		// Parse JSON file
 		parser = NewGenericJsonParser(ctx)
 
-	case ".csv":
+	case "csv":
 		// Parse CSV file
 		parser = NewGenericCSVParser(ctx)
 
-	case ".log":
+	case "log":
 		// Parse log file
 		parser = NewGenericLogParser(ctx)
 
-	case ".xlsx", ".xls":
+	case "xlsx", "xls":
 		// Parse Excel file
 		parser = NewGenericExcelParser(ctx)
 
 	default:
-		return fmt.Errorf("CreateDB(%s): unsupported file type: %s", datafile, ext)
+		return fmt.Errorf("CreateDB(%s): unsupported file type: %s", datafile, fileType)
 	}
 
 	// Step 2: Parse the data into rows
