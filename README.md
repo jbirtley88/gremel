@@ -18,7 +18,7 @@ Currently in active development, but Gremel will enable you to do things like th
     bar.csv
     other.csv
 
-    $ gremel
+    $ ./gremel
     gremel> .mount foo datafiles/foo.csv
     gremel> .mount bar datafiles/bar.csv
     gremel> SELECT foo.name, bar.something FROM foo, bar WHERE foo.name LIKE 'a%' AND foo.id = bar.id
@@ -61,10 +61,10 @@ You somehow need to:
 
 To try to do this by hand would be massively complicated and time-consuming, even if your scripting skills are God-tier.
 
-Since Gremel allows you to treat structured files as SQLite tables, and uses SQLite SQL syntax, you can do this easily in Gremel:
+Since Gremel allows you to treat structured files as SQLite tables, and uses SQLite SQL syntax, you can do this easily:
 
 ```
-$ gremel
+$ ./gremel
 gremel> -- Mount the ipaddresses.xlsx
 gremel> .mount ipaddresses test_resources/ipaddresses.xlsx
 2025/09/14 15:36:11 Creating table ipaddresses with SQL:
@@ -118,14 +118,14 @@ You can fire up gremel and copy/paste the above commands to try it out for yours
 # Parsing your own structured data
 Compose from the `BaseParser` in `data/base_parser.go` and:
 
-    - implement the `Parse()` method to convert your input data (an `io.Reader` into a `[]data.Row`).
+- implement the `Parse()` method to convert your input data (an `io.Reader` into a `[]data.Row`).
 
-    - implement the `GetHeaders()` method to return the names of the columns you'll be dealing with
+- implement the `GetHeaders()` method to return the names of the columns you'll be dealing with
 
 Each entry in the `[]data.Row` is conceptually the same as a SQL `Row`.
 
 # Parser TODO List
 
 # Licences
-    Gremel uses the very permissive BSD-3-Clause licence.  There are zero restrictions on how you use it, other than you acknowledge using it (and please give it a star on github!)
+Gremel uses the very permissive BSD-3-Clause licence.  There are zero restrictions on how you use it, other than you acknowledge using it (and please give it a star on github!)
 
