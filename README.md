@@ -44,8 +44,8 @@ You've got 2 datasources - the combined weblog file and an Excel spreadsheet of 
 
   `192.168.143.149 - - [06/Sep/2025:03:46:43 +0100] "GET /api/v1/items HTTP/1.1" 301 1135 "https://docs.example.com/guide" "python-requests/2.31.0" 472`
 
-- `ipaddresses.csv`
-  A CSV file containing IP address and datacenter
+- `ipaddresses.xslx`
+  An Excel file containing IP address and datacenter
 
   `ip,datacenter`
 
@@ -53,12 +53,17 @@ You've got 2 datasources - the combined weblog file and an Excel spreadsheet of 
 
 You somehow need to:
 
-- find the requests to `/api/foo` which have > 2000ms latency
-- grab the client IP address for that high latency request
-- look up which datacenter is handling that IP address
+- find the requests to `/api/foo` which have > 2000ms latency from the weblog
+- grab the client IP address for that high latency request from the weblog
+
+No problem so far, you can do that with a single line of `awk(1)`.
+
+But here's where it gets tricky:
+
+- you need look up which datacenter is handling each IP address in the Excel file
 - figure out if your hunch is right - i.e. the high latency is associated with only 1 datacenter
 
-To try to do this by hand would be massively complicated and time-consuming, even if your scripting skills are God-tier.
+To try to do this by hand would be massively complicated and time-consuming, even if your scripting skills are God-tier.  Sure, for this example you could export the Excel file to CSV and use a bit of `awk(1)` and `join(1)` but there could be many different data sources in many different formats for the problem at hand.
 
 Since Gremel allows you to treat structured files as SQLite tables, and uses SQLite SQL syntax, you can do this easily:
 
@@ -124,6 +129,12 @@ Compose from the `BaseParser` in `data/base_parser.go` and:
 Each entry in the `[]data.Row` is conceptually the same as a SQL `Row`.
 
 # Parser TODO List
+
+# Gremel TODO
+- REST api
+- Allow the mounting of files via HTTP File upload
+- Allow mounting of datasources by url, e.g. `https://myapi.com/api/v1/foo`
+- Allow exporting to files (particularly Excel)
 
 # Licences
 Gremel uses the very permissive BSD-3-Clause licence.  There are zero restrictions on how you use it, other than you acknowledge using it (and please give it a star on github!)
