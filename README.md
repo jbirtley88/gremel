@@ -20,7 +20,7 @@ Currently in active development, but Gremel will enable you to do things like th
     $ ./gremel
     gremel> .mount foo datafiles/foo.csv
     gremel> .mount bar datafiles/bar.csv
-    gremel> SELECT foo.name, bar.something FROM foo, bar WHERE foo.name LIKE 'a%' AND foo.id = bar.id
+    gremel> SELECT foo.name, bar.something FROM foo, bar WHERE foo.name LIKE '%i%' AND foo.id = bar.id
     foo.name      bar.something
     --------      -------------
     John Smith              111
