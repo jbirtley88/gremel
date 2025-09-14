@@ -29,12 +29,13 @@ func NewGenericLogParser(ctx data.GremelContext) data.Parser {
 }
 
 func (p *GenericLogParser) Parse(input io.Reader) (*data.RowList, error) {
-	logFormat := "clf"
+	logFormat := ""
 	if p.Ctx != nil {
 		if sn, ok := p.Ctx.Values().GetValue("log.format").(string); ok {
 			logFormat = sn
 		}
 	}
+
 	switch logFormat {
 	case "clf":
 		return p.parseCLF(input)
@@ -44,7 +45,29 @@ func (p *GenericLogParser) Parse(input io.Reader) (*data.RowList, error) {
 		return p.parseSyslog(input)
 	}
 
-	return nil, fmt.Errorf("Parse(%s): unsupported log format: %s", p.GetName(), logFormat)
+	return p.parseGeneric(input)
+}
+
+func (p *GenericLogParser) parseGeneric(input io.Reader) (*data.RowList, error) {
+	var rows []data.Row
+
+	scanner := bufio.NewScanner(input)
+	// optionally, resize scanner's capacity for lines over 64K
+	// const maxCapacity int = longLineLen  // your required line length
+	// buf := make([]byte, maxCapacity)
+	// scanner.Buffer(buf, maxCapacity)
+	for scanner.Scan() {
+		row, err := logparse.ParseLine(scanner.Text())
+		if err != nil {
+			return nil, fmt.Errorf("Parse(%s): error parsing log entry: %v", p.GetName(), err)
+		}
+		rows = append(rows, row)
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Printf("Parse(%s): error parsing log: %v", p.GetName(), err)
+	}
+	return data.NewRowList(rows, p.GetHeadings(rows), nil), nil
 }
 
 func (p *GenericLogParser) parseCLF(input io.Reader) (*data.RowList, error) {

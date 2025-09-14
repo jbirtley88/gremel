@@ -1,6 +1,7 @@
 package adapter
 
 import (
+	"bytes"
 	"context"
 	"os"
 	"sort"
@@ -18,7 +19,7 @@ func TestCLFGeneric(t *testing.T) {
 	defer f.Close()
 
 	ctx := data.NewGremelContext(context.TODO())
-	ctx.Values().SetValue("log.format", "clf")
+	// ctx.Values().SetValue("log.format", "clf")
 	p := NewGenericLogParser(ctx)
 	require.NotNil(t, p)
 
@@ -42,7 +43,7 @@ func TestCombinedGeneric(t *testing.T) {
 	defer f.Close()
 
 	ctx := data.NewGremelContext(context.TODO())
-	ctx.Values().SetValue("log.format", "combined")
+	// ctx.Values().SetValue("log.format", "combined")
 	p := NewGenericLogParser(ctx)
 	require.NotNil(t, p)
 
@@ -66,7 +67,7 @@ func TestSyslogGeneric(t *testing.T) {
 	defer f.Close()
 
 	ctx := data.NewGremelContext(context.TODO())
-	ctx.Values().SetValue("log.format", "syslog")
+	// ctx.Values().SetValue("log.format", "syslog")
 	p := NewGenericLogParser(ctx)
 	require.NotNil(t, p)
 
@@ -89,12 +90,12 @@ func TestGenericLogParser_UnsupportedFormat(t *testing.T) {
 	p := NewGenericLogParser(ctx)
 	require.NotNil(t, p)
 
-	f, err := os.Open("../test_resources/clf.log")
-	require.Nil(t, err)
-	require.NotNil(t, f)
-	defer f.Close()
+	buf := bytes.NewBuffer([]byte(
+		`unrecognised log line
+another unrecognised line`,
+	))
 
-	_, err = p.Parse(f)
+	_, err := p.Parse(buf)
 	require.NotNil(t, err)
-	assert.Contains(t, err.Error(), "unsupported log format")
+	assert.Contains(t, err.Error(), "unrecognised log format")
 }
