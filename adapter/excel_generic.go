@@ -31,14 +31,14 @@ func (p *GenericExcelParser) Parse(input io.Reader) (*data.RowList, error) {
 	// For now, we assume it's:
 	//   - Comma-separated
 	//   - First row is headings
-	sheetName := "Sheet1"
+	spreadsheet, err := excelize.OpenReader(input)
+	sheetName := spreadsheet.GetSheetList()[0]
 	if p.Ctx != nil {
 		if sn, ok := p.Ctx.Values().GetValue("excel.sheetname").(string); ok {
 			sheetName = sn
 		}
 	}
 
-	spreadsheet, err := excelize.OpenReader(input)
 	if err != nil {
 		return nil, fmt.Errorf("Parse(%s): open error: %w", p.GetName(), err)
 	}
