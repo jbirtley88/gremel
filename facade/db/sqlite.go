@@ -12,7 +12,8 @@ import (
 )
 
 type SQLiteGremelDB struct {
-	db *sql.DB
+	db           *sql.DB
+	schemaByName map[string]data.Row
 }
 
 // NewSQLiteGremelDB creates a new in-memory SQLite database connection
@@ -41,7 +42,8 @@ func newNamedSQLiteGremelDB(dbName string) GremelDB {
 	}
 
 	return &SQLiteGremelDB{
-		db: db,
+		db:           db,
+		schemaByName: make(map[string]data.Row),
 	}
 }
 
@@ -73,7 +75,7 @@ func (db *SQLiteGremelDB) getColumnType(value any) (string, error) {
 	}
 }
 
-func (db *SQLiteGremelDB) getCreateTableSQL(tableName string, row data.Row) (string, error) {
+func (db *SQLiteGremelDB) getCreateTableSQL(tableName string, row data.Row) (string, data.Row, error) {
 	sqlLines := make([]string, 0)
 
 	// Handle empty row case
@@ -82,17 +84,19 @@ func (db *SQLiteGremelDB) getCreateTableSQL(tableName string, row data.Row) (str
 		sqlLines = append(sqlLines, fmt.Sprintf("CREATE TABLE %s (", tableName))
 		sqlLines = append(sqlLines, "    _placeholder INTEGER") // Add a placeholder column for empty tables
 		sqlLines = append(sqlLines, ");")
-		return strings.Join(sqlLines, "\n"), nil
+		return strings.Join(sqlLines, "\n"), nil, nil
 	}
 
 	sqlLines = append(sqlLines, fmt.Sprintf("CREATE TABLE %s (", tableName))
 
 	// Collect column definitions first
+	schema := make(data.Row)
 	columns := make([]string, 0, len(row))
 	for fieldName, fieldValue := range row {
 		columnType, err := db.getColumnType(fieldValue)
+		schema[fieldName] = columnType
 		if err != nil {
-			return "", fmt.Errorf("failed to get column type for field %q: %w", fieldName, err)
+			return "", nil, fmt.Errorf("failed to get column type for field %q: %w", fieldName, err)
 		}
 		columns = append(columns, fmt.Sprintf("    %s %s", fieldName, columnType))
 	}
@@ -106,12 +110,12 @@ func (db *SQLiteGremelDB) getCreateTableSQL(tableName string, row data.Row) (str
 	}
 
 	sqlLines = append(sqlLines, ");")
-	return strings.Join(sqlLines, "\n"), nil
+	return strings.Join(sqlLines, "\n"), schema, nil
 }
 
 func (db *SQLiteGremelDB) CreateSchema(tableName string, row data.Row) error {
 	// Create the accounts table
-	createTableSQL, err := db.getCreateTableSQL(tableName, row)
+	createTableSQL, schema, err := db.getCreateTableSQL(tableName, row)
 	if err != nil {
 		return fmt.Errorf("CreateSchema(%s): failed to generate CREATE TABLE SQL: %w", tableName, err)
 	}
@@ -123,9 +127,20 @@ func (db *SQLiteGremelDB) CreateSchema(tableName string, row data.Row) error {
 		return fmt.Errorf("CreateSchema(%s): failed to create table: %w", tableName, err)
 	}
 
+	// Stash the schema for later retrieval
+	db.schemaByName[tableName] = schema
+
 	// TODO(jb): Create indexes for better query performance
 
 	return nil
+}
+
+func (db *SQLiteGremelDB) GetSchema(tableName string) (data.Row, error) {
+	schema, exists := db.schemaByName[tableName]
+	if !exists {
+		return nil, fmt.Errorf("GetSchema(%s): schema not found", tableName)
+	}
+	return schema, nil
 }
 
 func (db *SQLiteGremelDB) DropSchema(tableName string) error {
@@ -141,6 +156,14 @@ func (db *SQLiteGremelDB) DropSchema(tableName string) error {
 	}
 
 	return nil
+}
+
+func (db *SQLiteGremelDB) GetTables() ([]string, error) {
+	var tables []string
+	for t := range db.schemaByName {
+		tables = append(tables, t)
+	}
+	return tables, nil
 }
 
 func (db *SQLiteGremelDB) InsertRows(tableName string, rows []data.Row) error {

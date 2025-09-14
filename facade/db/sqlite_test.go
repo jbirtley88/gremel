@@ -162,10 +162,17 @@ func TestSQLiteGremelDB_getCreateTableSQL(t *testing.T) {
 			"active": true,
 		}
 
-		sql, err := db.getCreateTableSQL("users", row)
+		sql, schema, err := db.getCreateTableSQL("users", row)
 		assert.NoError(t, err)
 		assert.NotEmpty(t, sql)
-
+		assert.NotNil(t, schema)
+		assert.Equal(t, schema, data.Row{
+			"id":     "INTEGER",
+			"name":   "TEXT",
+			"age":    "INTEGER",
+			"salary": "REAL",
+			"active": "BOOLEAN",
+		})
 		// Check that SQL contains CREATE TABLE statement
 		assert.Contains(t, sql, "CREATE TABLE users (")
 
@@ -183,11 +190,13 @@ func TestSQLiteGremelDB_getCreateTableSQL(t *testing.T) {
 	t.Run("generates SQL for empty row", func(t *testing.T) {
 		row := data.Row{}
 
-		sql, err := db.getCreateTableSQL("empty_table", row)
+		sql, schema, err := db.getCreateTableSQL("empty_table", row)
 		assert.NoError(t, err)
 		assert.Contains(t, sql, "CREATE TABLE empty_table (")
 		assert.Contains(t, sql, "_placeholder INTEGER") // Empty tables get a placeholder column
 		assert.Contains(t, sql, ");")
+
+		assert.Nil(t, schema)
 	})
 
 	t.Run("handles row with unsupported data type", func(t *testing.T) {
@@ -196,11 +205,12 @@ func TestSQLiteGremelDB_getCreateTableSQL(t *testing.T) {
 			"unsupported": complex(1, 2),
 		}
 
-		sql, err := db.getCreateTableSQL("test_table", row)
+		sql, schema, err := db.getCreateTableSQL("test_table", row)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "failed to get column type for field \"unsupported\"")
 		assert.Contains(t, err.Error(), "unsupported data type")
 		assert.Empty(t, sql)
+		assert.Nil(t, schema)
 	})
 
 	t.Run("generates SQL with special characters in table name", func(t *testing.T) {
@@ -208,9 +218,13 @@ func TestSQLiteGremelDB_getCreateTableSQL(t *testing.T) {
 			"field1": "value1",
 		}
 
-		sql, err := db.getCreateTableSQL("table_with_underscores", row)
+		sql, schema, err := db.getCreateTableSQL("table_with_underscores", row)
 		assert.NoError(t, err)
 		assert.Contains(t, sql, "CREATE TABLE table_with_underscores (")
+		assert.NotNil(t, schema)
+		assert.Equal(t, schema, data.Row{
+			"field1": "TEXT",
+		})
 	})
 }
 
