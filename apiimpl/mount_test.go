@@ -15,14 +15,14 @@ func TestGetHighLatencyDatacenter(t *testing.T) {
 	database := db.GetGremelDB()
 
 	// Step 2: create the 'weblogs' table from the logfile
-	err := MountFile(ctx, "../test_resources/weblogs.log")
+	err := MountFile(ctx, "weblogs", "../test_resources/weblogs.log")
 	if err != nil {
 		t.Fatalf("failed to create 'weblogs' table in DB: %v", err)
 	}
 
 	// Step 3: create the 'ipaddresses' table from the excel spreadsheet
 	ctx.Values().SetValue("excel.sheetname", "ipaddresses")
-	err = MountFile(ctx, "../test_resources/ipaddresses.xlsx")
+	err = MountFile(ctx, "ipaddresses", "../test_resources/ipaddresses.xlsx")
 	if err != nil {
 		t.Fatalf("failed to create 'ipaddresses' table in DB: %v", err)
 	}
@@ -36,7 +36,7 @@ LEFT JOIN weblogs AS w
 WHERE w.request LIKE  'GET /api/foo%'
 GROUP BY i.datacenter
 ORDER BY i.datacenter`
-	rows, err := database.Query(sqlQuery)
+	rows, columns, err := database.Query(sqlQuery)
 	if err != nil {
 		t.Fatalf("failed to execute query: %v", err)
 	}
@@ -48,4 +48,5 @@ ORDER BY i.datacenter`
 	assert.Equal(t, int64(0), rows[1]["latency>2000"])
 	assert.Equal(t, int64(0), rows[2]["latency>2000"])
 	assert.Equal(t, int64(0), rows[3]["latency>2000"])
+	assert.Equal(t, []string{"datacenter", "latency>2000"}, columns)
 }

@@ -146,7 +146,7 @@ LEFT JOIN weblogs AS w
 WHERE w.request LIKE  'GET /api/foo%'
 GROUP BY i.datacenter
 ORDER BY i.datacenter`
-	rows, err := database.Query(sqlQuery)
+	rows, columns, err := database.Query(sqlQuery)
 	if err != nil {
 		t.Fatalf("failed to execute query: %v", err)
 	}
@@ -158,4 +158,5 @@ ORDER BY i.datacenter`
 	assert.Equal(t, int64(0), rows[1]["latency>2000"])
 	assert.Equal(t, int64(0), rows[2]["latency>2000"])
 	assert.Equal(t, int64(0), rows[3]["latency>2000"])
+	assert.Equal(t, []string{"datacenter", "latency>2000"}, columns)
 }

@@ -14,6 +14,7 @@ import (
 type SQLiteGremelDB struct {
 	db           *sql.DB
 	schemaByName map[string]data.Row
+	mountByName  map[string]string
 }
 
 // NewSQLiteGremelDB creates a new in-memory SQLite database connection
@@ -44,6 +45,7 @@ func newNamedSQLiteGremelDB(dbName string) GremelDB {
 	return &SQLiteGremelDB{
 		db:           db,
 		schemaByName: make(map[string]data.Row),
+		mountByName:  make(map[string]string),
 	}
 }
 
@@ -166,6 +168,29 @@ func (db *SQLiteGremelDB) GetTables() ([]string, error) {
 	return tables, nil
 }
 
+func (db *SQLiteGremelDB) GetMount(tableName string) (data.Row, error) {
+	if tableName == "" {
+		// Get all mounts
+		row := make(data.Row)
+		for table, mount := range db.mountByName {
+			row[table] = mount
+		}
+		return row, nil
+	}
+
+	source, exists := db.mountByName[tableName]
+	if !exists {
+		return nil, fmt.Errorf("GetMount(%s): mount not found", tableName)
+	}
+	return data.Row{tableName: source}, nil
+}
+
+// Register a mount for a table
+func (db *SQLiteGremelDB) Mount(tableName string, source string) error {
+	db.mountByName[tableName] = source
+	return nil
+}
+
 func (db *SQLiteGremelDB) InsertRows(tableName string, rows []data.Row) error {
 	if len(rows) == 0 {
 		return nil // Nothing to insert
@@ -206,17 +231,17 @@ func (db *SQLiteGremelDB) InsertRows(tableName string, rows []data.Row) error {
 	return nil
 }
 
-func (db *SQLiteGremelDB) Query(sqlQuery string) ([]data.Row, error) {
+func (db *SQLiteGremelDB) Query(sqlQuery string) ([]data.Row, []string, error) {
 	rows, err := db.db.Query(sqlQuery)
 	if err != nil {
-		return nil, fmt.Errorf("Query(%s): failed to execute query: %w", sqlQuery, err)
+		return nil, nil, fmt.Errorf("Query(%s): failed to execute query: %w", sqlQuery, err)
 	}
 	defer rows.Close()
 
 	// Get column names
 	columns, err := rows.Columns()
 	if err != nil {
-		return nil, fmt.Errorf("Query(%s): failed to get columns: %w", sqlQuery, err)
+		return nil, nil, fmt.Errorf("Query(%s): failed to get columns: %w", sqlQuery, err)
 	}
 
 	var results []data.Row
@@ -232,7 +257,7 @@ func (db *SQLiteGremelDB) Query(sqlQuery string) ([]data.Row, error) {
 
 		// Scan the result into the column pointers...
 		if err := rows.Scan(columnPointers...); err != nil {
-			return nil, fmt.Errorf("Query(%s): failed to scan row: %w", sqlQuery, err)
+			return nil, nil, fmt.Errorf("Query(%s): failed to scan row: %w", sqlQuery, err)
 		}
 
 		// Create a map and populate it with the column data
@@ -252,8 +277,8 @@ func (db *SQLiteGremelDB) Query(sqlQuery string) ([]data.Row, error) {
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("Query(%s): row iteration error: %w", sqlQuery, err)
+		return nil, nil, fmt.Errorf("Query(%s): row iteration error: %w", sqlQuery, err)
 	}
 
-	return results, nil
+	return results, columns, nil
 }
