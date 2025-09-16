@@ -123,7 +123,7 @@ func doMount(ctx data.GremelContext, tokens []string) error {
 
 	case 3:
 		// .mount NAME /path/to/file
-		err := apiimpl.MountFile(ctx, tokens[1], tokens[2])
+		err := apiimpl.Mount(ctx, tokens[1], tokens[2])
 		if err != nil {
 			return fmt.Errorf("Error mounting file: %v\n", err)
 		}
