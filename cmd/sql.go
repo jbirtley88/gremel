@@ -22,11 +22,17 @@ var sqlCmd = &cobra.Command{
 	Run:   RunSQL,
 }
 
+var silentMode bool
+
 func init() {
 	rootCmd.AddCommand(sqlCmd)
+	rootCmd.PersistentFlags().BoolVarP(&silentMode, "silent", "q", false, "Silent mode - suppress output except for query results")
 }
 
 func RunSQL(cmd *cobra.Command, args []string) {
+	if !silentMode {
+		fmt.Println("Type '.help' or '?' for help")
+	}
 	err := runSQL(args)
 	if err != nil {
 		log.Errorf("%s: Error running SQL command: %v", cmd.Name(), err)
@@ -39,6 +45,7 @@ func runSQL(args []string) error {
 	prompt := "gremel> "
 	var sqlBuffer []string
 	ctx := data.NewGremelContext(context.Background())
+	ctx.Values().SetValue("silent", silentMode)
 	for {
 		// Use continuation prompt if we're building a multi-line SQL statement
 		currentPrompt := prompt
@@ -46,11 +53,15 @@ func runSQL(args []string) error {
 			currentPrompt = "    ...> "
 		}
 
-		fmt.Print(currentPrompt)
+		if !silentMode {
+			fmt.Print(currentPrompt)
+		}
 		line, err := reader.ReadString('\n')
 		if err != nil {
 			if err == io.EOF {
-				fmt.Println("\nExiting...")
+				if !silentMode {
+					fmt.Println("\nExiting...")
+				}
 				return nil
 			}
 			return err
@@ -73,6 +84,11 @@ func runSQL(args []string) error {
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
 			}
+		case ".help", "help", "?":
+			err := doHelp(ctx, tokens)
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
 		case ".tables":
 			err := doTables(ctx, tokens)
 			if err != nil {
@@ -80,6 +96,11 @@ func runSQL(args []string) error {
 			}
 		case ".schema":
 			err := doSchema(ctx, tokens)
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
+		case ".silent":
+			err := doSilent(ctx, tokens)
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
 			}
@@ -92,6 +113,40 @@ func runSQL(args []string) error {
 			}
 		}
 	}
+}
+
+// doSilent handles the .silent command
+func doSilent(ctx data.GremelContext, tokens []string) error {
+	if len(tokens) != 2 {
+		return fmt.Errorf("usage: .silent on|off")
+	}
+	switch strings.ToLower(tokens[1]) {
+	case "on":
+		ctx.Values().SetValue("silent", true)
+		silentMode = true
+	case "off":
+		ctx.Values().SetValue("silent", true)
+		silentMode = false
+		fmt.Println("Silent mode disabled")
+	default:
+		return fmt.Errorf("usage: .silent on|off")
+	}
+	return nil
+}
+
+func doHelp(ctx data.GremelContext, tokens []string) error {
+	w := tabwriter.NewWriter(os.Stdout, 1, 1, 4, ' ', 0)
+	w.Write([]byte("Available commands:\n"))
+	w.Write([]byte(".help\tShow this help message\n"))
+	w.Write([]byte(".quit or .exit or .q\tExit the shell\n"))
+	w.Write([]byte(".mount [tablename [<file_path>]]\tMount a data source\n"))
+	w.Write([]byte(".tables\tList all tables\n"))
+	w.Write([]byte(".schema <tablename>\tShow schema of a table\n"))
+	w.Write([]byte(".headings on|off\tEnable or disable column headings\n"))
+	w.Write([]byte(".silent on|off\tEnable or disable silent mode\n"))
+	w.Write([]byte("SELECT ...;\tExecute a SQL SELECT statement\n"))
+	w.Flush()
+	return nil
 }
 
 // doMount handles the .mount command
@@ -190,7 +245,7 @@ func processSQLLine(ctx data.GremelContext, line string, sqlBuffer *[]string) er
 
 		// Execute the complete SQL statement
 		completeSQL := strings.Join(*sqlBuffer, " ")
-		err := executeSQL(completeSQL)
+		err := executeSQL(ctx, completeSQL)
 		if err != nil {
 			*sqlBuffer = []string{} // Reset buffer
 			return err
@@ -261,32 +316,39 @@ func separator(s string) string {
 }
 
 // executeSQL executes a complete SQL statement
-func executeSQL(sql string) error {
+func executeSQL(ctx data.GremelContext, sql string) error {
 	sql = strings.TrimSpace(sql)
 	if sql == "" {
 		return nil
 	}
 
 	// TODO: Implement actual SQL execution using the database
-	fmt.Printf("Executing SQL: %s\n", sql)
+	if ctx.Values().GetBool("verbose") {
+		fmt.Printf("Executing SQL: %s\n", sql)
+	}
 	rows, columns, err := apiimpl.Query(data.NewGremelContext(context.Background()), sql)
 	if err != nil {
 		return fmt.Errorf("executeSQL(): %w", err)
 	}
 
-	// Column names
+	// Print results in tabular format
+	// Use tabwriter for aligned columns
 	w := tabwriter.NewWriter(os.Stdout, 1, 1, 4, ' ', 0)
-	if len(columns) > 0 {
-		for _, col := range columns {
-			_, _ = w.Write([]byte(col + "\t"))
-		}
-		_, _ = w.Write([]byte("\n"))
 
-		// Heading separator
-		for _, col := range columns {
-			_, _ = w.Write([]byte(separator(col) + "\t"))
+	// Column names
+	if !silentMode {
+		if len(columns) > 0 {
+			for _, col := range columns {
+				_, _ = w.Write([]byte(col + "\t"))
+			}
+			_, _ = w.Write([]byte("\n"))
+
+			// Heading separator
+			for _, col := range columns {
+				_, _ = w.Write([]byte(separator(col) + "\t"))
+			}
+			_, _ = w.Write([]byte("\n"))
 		}
-		_, _ = w.Write([]byte("\n"))
 	}
 
 	// Process rows
@@ -300,6 +362,9 @@ func executeSQL(sql string) error {
 		}
 		_ = w.Flush()
 	}
-	fmt.Printf("%d rows\n", len(rows))
+
+	if !silentMode {
+		fmt.Printf("%d rows\n", len(rows))
+	}
 	return nil
 }
