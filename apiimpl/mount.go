@@ -33,7 +33,7 @@ func Mount(ctx data.GremelContext, name string, source string) error {
 	if fi.IsDir() {
 		return fmt.Errorf("Mount(%s): directories not supported", source)
 	}
-	return nil
+	return MountFile(ctx, name, source)
 }
 
 // Only used for testing - allows us to mock out HTTP calls

@@ -3,7 +3,6 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"math"
 	"strings"
 
@@ -123,7 +122,7 @@ func (db *SQLiteGremelDB) CreateSchema(tableName string, row data.Row) error {
 	}
 
 	// TODO(john): debug logger
-	log.Printf("Creating table %s with SQL:\n%s\n", tableName, createTableSQL)
+	// log.Printf("Creating table %s with SQL:\n%s\n", tableName, createTableSQL)
 	_, err = db.db.Exec(createTableSQL)
 	if err != nil {
 		return fmt.Errorf("CreateSchema(%s): failed to create table: %w", tableName, err)

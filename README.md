@@ -10,7 +10,7 @@ Gremel is a utility for interrogating and extracting data from structured source
 
 Conceptually and functionally similar to Apache Drill, but considerably more lightweight and simpler to extend the functionality to accommodate whatever exotic data sources you have.
 
-Currently in active development, but Gremel will enable you to do things like this:
+Currently in active development, but Gremel will enable you to do things like this (you can copy/paste these commands - they refer to the files in `test_resources/...`):
 ```
     $ ls datafiles/
     foo.csv
@@ -18,15 +18,46 @@ Currently in active development, but Gremel will enable you to do things like th
     other.csv
 
     $ ./gremel
-    gremel> .mount foo datafiles/foo.csv
-    gremel> .mount bar datafiles/bar.csv
-    gremel> SELECT foo.name, bar.something FROM foo, bar WHERE foo.name LIKE '%i%' AND foo.id = bar.id
-    foo.name      bar.something
-    --------      -------------
-    John Smith              111
-    Micheal Mouse           123
-    2 rows
+    Type '.help' or '?' for help
+    gremel> -- Mount the 'accounts.csv' to the 'accounts' table
+    gremel> .mount accounts test_resources/accounts.csv
+    gremel> -- Mount the 'people.csv' to the 'people' table
+    gremel> .mount people test_resources/people.csv
+    gremel> -- We want the full name (in people.csv) and email (in people.csv and accounts.csv)
+gremel> SELECT
+    ...>   people.id,
+    ...>   accounts.username,
+    ...>   people.fullname
+    ...> FROM
+    ...>   people,
+    ...>   accounts
+    ...> WHERE
+    ...>   accounts.email = people.email
+    ...> LIMIT 10;
+id    username         fullname                
+--    --------         --------                
+1     krawnsley0       Marcellina Benedicto    
+2     eatmore1         Aubert Akers            
+3     wshirtcliffe2    Felicle Paynton         
+4     walywin3         Ashla Palatini          
+5     mbowdler4        Babbette Tratton        
+6     supshall5        Mendy Doiley            
+7     dclapp6          Nedi Grattan            
+8     awillarton7      Liva Eagell             
+9     sagnew8          Celestyn Perchard       
+10    zmarkussen9      Devonna Stedmond        
+10 rows
 ```
+You can also one-shot things in a single command-line (which can be handy for scripting):
+```sh
+$ echo -e ".mount accounts test_resources/accounts.json\nSELECT username FROM accounts;" | ./gremel --silent
+klunbech0           
+rpoyle1             
+agartery2           
+mallsup3            
+isim4
+```
+The `--silent` (or `-q`) removes all non-data output, so it is incredibly useful for scipting as part of a pipeline.
 
 Gremel is still very much a work-in-progress, please feel free to contribute.
 
