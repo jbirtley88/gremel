@@ -19,11 +19,11 @@ Currently in active development, but Gremel will enable you to do things like th
 
     $ ./gremel
     Type '.help' or '?' for help
-    gremel> -- Mount the 'accounts.csv' to the 'accounts' table
-    gremel> .mount accounts test_resources/accounts.csv
+    gremel> -- Mount the 'accounts.json' to the 'accounts' table
+    gremel> .mount accounts test_resources/accounts.json
     gremel> -- Mount the 'people.csv' to the 'people' table
     gremel> .mount people test_resources/people.csv
-    gremel> -- We want the full name (in people.csv) and email (in people.csv and accounts.csv)
+    gremel> -- We want the full name (in people.csv) and email (in people.csv and accounts.json)
 gremel> SELECT
     ...>   people.id,
     ...>   accounts.username,
@@ -57,7 +57,20 @@ agartery2
 mallsup3            
 isim4
 ```
-The `--silent` (or `-q`) removes all non-data output, so it is incredibly useful for scipting as part of a pipeline.
+The `--silent` (or `-q`) removes all non-data output, so it is incredibly useful for scripting as part of a pipeline.
+
+You can auto-mount tables with the `--mount` (`-m`) flag:
+```sh
+$ echo "SELECT username FROM accounts WHERE username LIKE '%end%';" | ./gremel --silent --mount accounts=test_resources/accounts.json
+jendlex           
+phendrickson4q    
+hkendalg1         
+gevendenj0        
+genderbyno        
+pspendleyri
+```
+
+You can have as many `--mount` (`-m`) as you like.  Again, this is super-useful for scripting.
 
 Gremel is still very much a work-in-progress, please feel free to contribute.
 
@@ -166,6 +179,7 @@ Each entry in the `[]data.Row` is conceptually the same as a SQL `Row`.
 - Allow the mounting of files via HTTP File upload
 - Allow mounting of datasources by url, e.g. `https://myapi.com/api/v1/foo`
 - Allow exporting to files (particularly Excel)
+- a convert` subcommand that allows scripting of file conversions (e.g. Excel->JSON etc)
 
 # Licences
 Gremel uses the very permissive BSD-3-Clause licence.  There are zero restrictions on how you use it, other than you acknowledge using it (and please give it a star on github!)

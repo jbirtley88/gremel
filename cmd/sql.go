@@ -23,13 +23,16 @@ var sqlCmd = &cobra.Command{
 }
 
 var silentMode bool
+var mount []string
 
 func init() {
 	rootCmd.AddCommand(sqlCmd)
 	rootCmd.PersistentFlags().BoolVarP(&silentMode, "silent", "q", false, "Silent mode - suppress output except for query results")
+	rootCmd.PersistentFlags().StringArrayVarP(&mount, "mount", "m", []string{}, "Mount a data source in the format tablename=path (can be specified multiple times)")
 }
 
 func RunSQL(cmd *cobra.Command, args []string) {
+
 	if !silentMode {
 		fmt.Println("Type '.help' or '?' for help")
 	}
@@ -40,12 +43,23 @@ func RunSQL(cmd *cobra.Command, args []string) {
 }
 
 func runSQL(args []string) error {
+	ctx := data.NewGremelContext(context.Background())
+	ctx.Values().SetValue("silent", silentMode)
+	// First, validate the mount args
+	// Mount args must be in the format tablename=path
+	for _, m := range mount {
+		parts := strings.SplitN(m, "=", 2)
+		if len(parts) != 2 {
+			return fmt.Errorf("Invalid --mount argument: %s (must be in the format tablename=path)", m)
+		}
+
+		doMount(ctx, []string{".mount", parts[0], parts[1]})
+	}
+
 	// Read one line of text at a time from stdin
 	reader := bufio.NewReader(os.Stdin)
 	prompt := "gremel> "
 	var sqlBuffer []string
-	ctx := data.NewGremelContext(context.Background())
-	ctx.Values().SetValue("silent", silentMode)
 	for {
 		// Use continuation prompt if we're building a multi-line SQL statement
 		currentPrompt := prompt

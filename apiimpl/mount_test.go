@@ -97,13 +97,13 @@ func TestMountHttpUrl(t *testing.T) {
 	assert.Equal(t, int64(1000), rows[0]["count"])
 
 	// Step 5: verify some actual data content
-	rows, columns, err = database.Query("SELECT id, username, email FROM people WHERE id = 1")
+	rows, columns, err = database.Query("SELECT id, fullname, email FROM people WHERE id = 1")
 	require.NoError(t, err)
 	require.Len(t, rows, 1)
-	assert.Equal(t, []string{"id", "username", "email"}, columns)
-	assert.Equal(t, int64(1), rows[0]["id"])
-	assert.Equal(t, "jgardener0", rows[0]["username"])
-	assert.Equal(t, "prolfini0@yolasite.com", rows[0]["email"])
+	assert.Equal(t, []string{"id", "fullname", "email"}, columns)
+	assert.Equal(t, "1", rows[0]["id"])
+	assert.Equal(t, "Marcellina Benedicto", rows[0]["fullname"])
+	assert.Equal(t, "mbenedicto0@earthlink.net", rows[0]["email"])
 }
 
 func TestMountHttpUrlError(t *testing.T) {
