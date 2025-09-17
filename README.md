@@ -257,6 +257,22 @@ Again, HTTP endpoints can be mounted and queried in one command - which saves me
 234.136.105.246    Aguie Lashmore
 ```
 
+## Daemon Mode (REST API)
+Running Gremel with the `daemon` subcommand starts the API server.  This is useful if yo uwant to do your own scripting (e.g. with Python `requests` or if you want to hook up a web UI).
+```sh
+    $ gremel daemon
+Running Gremel daemon on 0.0.0.0:8000
+[GIN-debug] Listening and serving HTTP on 0.0.0.0:8000
+```
+The available endpoints are:
+| Method | URI | Description |
+|--------|-----|-------------|
+| `PUT` | `/api/v1/mount?table=TABLE&source=PATH` | Mount a table from the given source (exactly the same as `'.mount table source`) |
+| `GET` | `/api/v1/mount?table=TABLE` | Show the mount information for a named table |
+| `GET` | `/api/v1/query?q=SELECT...` | Execute a SQL query.  Only very crude input sanitisation is done |
+| `GET` | `/api/v1/schema?table=TABLE` | Get the schema for the named table |
+| `GET` | `/api/v1/tables` | List all of the currently mounted tables |
+
 # Parsing your own structured data
 Compose from the `BaseParser` in `data/base_parser.go` and:
 
@@ -269,7 +285,6 @@ Each entry in the `[]data.Row` is conceptually the same as a SQL `Row`.
 # Parser TODO List
 
 # Gremel TODO
-- REST api
 - Allow the mounting of files via HTTP File upload
 - Allow exporting to files (particularly Excel)
 - a convert` subcommand that allows scripting of file conversions (e.g. Excel->JSON etc)
