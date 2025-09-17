@@ -3,6 +3,7 @@ package data
 import (
 	"fmt"
 	"reflect"
+	"regexp"
 	"strconv"
 )
 
@@ -11,19 +12,31 @@ func GetType(v any) reflect.Kind {
 	return rv.Kind()
 }
 
-func ParseValue(value any) any {
+var reFloat = regexp.MustCompile(`^[+-]?(?:(?:\d+\.?\d*)|(?:\.\d+))(?:[eE][+-]?\d+)?$|^[+-]?(?:Inf|inf|NaN|nan)$`)
+
+// IsFloat determines if a string is a valid float64 using regex
+func IsFloat(s string) bool {
+	// Regex pattern for valid float64 values:
+	// Optional +/- sign, followed by digits, optional decimal point and more digits,
+	// optional scientific notation (e/E followed by optional +/- and digits)
+	// Also handles special cases like Inf, -Inf, NaN
+	return reFloat.MatchString(s)
+}
+
+func InferValue(value any) any {
 	// Try int
-	if v, err := strconv.ParseInt(fmt.Sprint(value), 10, 64); err == nil {
+	sValue := fmt.Sprint(value)
+	if v, err := strconv.ParseInt(sValue, 10, 64); err == nil {
 		return v
 	}
 	// Try float
-	if v, err := strconv.ParseFloat(fmt.Sprint(value), 64); err == nil {
+	if v, err := strconv.ParseFloat(sValue, 64); err == nil {
 		return v
 	}
 	// Try bool
-	if v, err := strconv.ParseBool(fmt.Sprint(value)); err == nil {
+	if v, err := strconv.ParseBool(sValue); err == nil {
 		return v
 	}
 	// Default to string
-	return fmt.Sprint(value)
+	return sValue
 }

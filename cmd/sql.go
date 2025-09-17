@@ -50,7 +50,7 @@ func runSQL(args []string) error {
 	for _, m := range mount {
 		parts := strings.SplitN(m, "=", 2)
 		if len(parts) != 2 {
-			return fmt.Errorf("Invalid --mount argument: %s (must be in the format tablename=path)", m)
+			return fmt.Errorf("invalid --mount argument: %s (must be in the format tablename=path)", m)
 		}
 
 		doMount(ctx, []string{".mount", parts[0], parts[1]})
@@ -194,7 +194,11 @@ func doMount(ctx data.GremelContext, tokens []string) error {
 		// .mount NAME /path/to/file
 		err := apiimpl.Mount(ctx, tokens[1], tokens[2])
 		if err != nil {
-			return fmt.Errorf("Error mounting file: %v\n", err)
+			return fmt.Errorf("error mounting file: %w", err)
+		}
+		if !silentMode {
+			fmt.Printf("Mounted %s as %s\n", tokens[2], tokens[1])
+			doSchema(ctx, tokens[0:2])
 		}
 		return nil
 

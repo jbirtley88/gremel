@@ -7,11 +7,12 @@ Gremel is a utility for interrogating and extracting data from structured source
 - Apache combined log
 - Syslog
 - Excel spreadsheets
+- HTTP endpoints which return JSON (e.g. REST api)
 
 Conceptually and functionally similar to Apache Drill, but considerably more lightweight and simpler to extend the functionality to accommodate whatever exotic data sources you have.
 
 Currently in active development, but Gremel will enable you to do things like this (you can copy/paste these commands - they refer to the files in `test_resources/...`):
-```
+```sh
     $ ls datafiles/
     foo.csv
     bar.csv
@@ -23,7 +24,7 @@ Currently in active development, but Gremel will enable you to do things like th
     gremel> .mount accounts test_resources/accounts.json
     gremel> -- Mount the 'people.csv' to the 'people' table
     gremel> .mount people test_resources/people.csv
-    gremel> -- We want the full name (in people.csv) and email (in people.csv and accounts.json)
+    gremel> -- We want the full name (in people) and email (in people and accounts)
 gremel> SELECT
     ...>   people.id,
     ...>   accounts.username,
@@ -163,6 +164,99 @@ So it's pretty obvious that whatever the problem is, it's to do with fielding re
 
 You can fire up gremel and copy/paste the above commands to try it out for yourself.
 
+## Mounting HTTP Endpoints (REST APIs)
+A particularly useful feature of Gremel is the ability to mount HTTP endpoints.  This can be a huge time and effort saving when trying to reconcile data sources which include online data.
+
+Here's the same example as above, with `accounts` and `people`, except this time we are mounting HTTP endpoints instead of files.
+
+Note how the endpoints return JSON.  Currently, JSON is the only supported format, but I might expand this if I encounter a need to do so:
+```sh
+$ curl -s http://example.com:8080/api/people
+[
+  {
+    "email": "mbenedicto0@earthlink.net",
+    "fullname": "Marcellina Benedicto",
+    "gender": "Female",
+    "id": "1",
+    "ip_address": "242.223.255.120"
+  },
+  {
+    "email": "aakers1@newsvine.com",
+    "fullname": "Aubert Akers",
+    "gender": "Male",
+    "id": "2",
+    "ip_address": "97.246.179.21"
+  },
+  ...
+```
+
+Mount and query the `http://example.com:8080/api/accounts` and `http://example.com:8080/api/people`:
+```sh
+    $ ./gremel
+    Type '.help' or '?' for help
+    gremel> -- Mount 'http://example.com:8080/api/accounts' to the 'accounts' table
+    gremel> .mount accounts http://example.com:8080/api/accounts
+Mounted http://example.com:8080/api/accounts as accounts
+    gremel> -- Mount 'http://example.com:8080/api/people' to the 'people' table
+    gremel> .mount people http://example.com:8080/api/people
+Mounted http://example.com:8080/api/people as people
+
+    gremel> -- What tables do we have mounted?
+    gremel> .tables
+accounts
+people
+
+    gremel> -- What do these tables look like?
+    gremel> .schema accounts
+mac_address: TEXT
+percent: TEXT
+username: TEXT
+email: TEXT
+id: INTEGER    
+   
+    gremel> .schema people
+email: TEXT
+fullname: TEXT
+gender: TEXT
+id: TEXT
+ip_address: TEXT
+
+    gremel> -- We want the full name (in people) and email (in people and accounts)
+gremel> SELECT
+    ...>   people.id,
+    ...>   accounts.username,
+    ...>   people.fullname
+    ...> FROM
+    ...>   people,
+    ...>   accounts
+    ...> WHERE
+    ...>   accounts.email = people.email
+    ...> LIMIT 10;
+id    username         fullname                
+--    --------         --------                
+1     krawnsley0       Marcellina Benedicto    
+2     eatmore1         Aubert Akers            
+3     wshirtcliffe2    Felicle Paynton         
+4     walywin3         Ashla Palatini          
+5     mbowdler4        Babbette Tratton        
+6     supshall5        Mendy Doiley            
+7     dclapp6          Nedi Grattan            
+8     awillarton7      Liva Eagell             
+9     sagnew8          Celestyn Perchard       
+10    zmarkussen9      Devonna Stedmond        
+10 rows
+```
+
+Every time you execute `.mount table URL`, the table is dropped and recreated - which completely refreshes the data.
+
+Again, HTTP endpoints can be mounted and queried in one command - which saves messing about with `jq(1)`:
+```sh
+    $ echo "SELECT ip_address,fullname FROM people WHERE fullname LIKE '%ash%';" | gremel --silent --mount people=http://example.com:8080/api/people
+134.140.147.249    Ashla Palatini    
+245.185.205.153    Dayle Ashleigh    
+234.136.105.246    Aguie Lashmore
+```
+
 # Parsing your own structured data
 Compose from the `BaseParser` in `data/base_parser.go` and:
 
@@ -177,9 +271,9 @@ Each entry in the `[]data.Row` is conceptually the same as a SQL `Row`.
 # Gremel TODO
 - REST api
 - Allow the mounting of files via HTTP File upload
-- Allow mounting of datasources by url, e.g. `https://myapi.com/api/v1/foo`
 - Allow exporting to files (particularly Excel)
 - a convert` subcommand that allows scripting of file conversions (e.g. Excel->JSON etc)
+- "Data explorer" GUI
 
 # Licences
 Gremel uses the very permissive BSD-3-Clause licence.  There are zero restrictions on how you use it, other than you acknowledge using it (and please give it a star on github!)

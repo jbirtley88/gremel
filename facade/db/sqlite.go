@@ -63,9 +63,9 @@ func (db *SQLiteGremelDB) getColumnType(value any) (string, error) {
 		}
 		return "REAL", nil
 	case float64:
-		if _, frac := math.Modf(v); frac == 0 {
-			return "INTEGER", nil
-		}
+		// if _, frac := math.Modf(v); frac == 0 {
+		// 	return "INTEGER", nil
+		// }
 		return "REAL", nil
 	case bool:
 		return "BOOLEAN", nil

@@ -7,6 +7,7 @@ import (
 	"io"
 
 	"github.com/jbirtley88/gremel/data"
+	"github.com/jbirtley88/gremel/helper"
 
 	"github.com/spf13/viper"
 )
@@ -57,7 +58,7 @@ func (p *GenericJsonParser) Parse(input io.Reader) (*data.RowList, error) {
 	if err == nil {
 		// DONE
 		// It is already a []data.Row
-		return data.NewRowList(sliceOfMap, p.GetHeadings(sliceOfMap), nil), nil
+		return data.NewRowList(helper.NormaliseNumbers(sliceOfMap), p.GetHeadings(sliceOfMap), nil), nil
 	}
 
 	// Step 3: Try unmarshalling the JSON into a map[string]any
@@ -76,7 +77,7 @@ func (p *GenericJsonParser) Parse(input io.Reader) (*data.RowList, error) {
 		return data.NewRowList(nil, nil, e), e
 	}
 
-	return data.NewRowList(rows, p.GetHeadings(rows), nil), nil
+	return data.NewRowList(helper.NormaliseNumbers(rows), p.GetHeadings(rows), nil), nil
 }
 
 // We have been told (via some parameter) where the root of the []JSONObjects are.

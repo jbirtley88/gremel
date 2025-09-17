@@ -50,7 +50,7 @@ func (p *GenericCSVParser) Parse(input io.Reader) (*data.RowList, error) {
 	for _, record := range records[1:] {
 		row := make(map[string]any)
 		for i, value := range record {
-			row[headings[i]] = value
+			row[headings[i]] = data.InferValue(value)
 		}
 		rows = append(rows, row)
 	}

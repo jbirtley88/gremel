@@ -59,7 +59,7 @@ func (p *GenericExcelParser) Parse(input io.Reader) (*data.RowList, error) {
 	for _, ssRow := range spreadsheetRows[1:] {
 		row := make(map[string]any)
 		for i, value := range ssRow {
-			row[headings[i]] = data.ParseValue(value)
+			row[headings[i]] = data.InferValue(value)
 		}
 		rows = append(rows, row)
 	}

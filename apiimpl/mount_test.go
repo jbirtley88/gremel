@@ -25,6 +25,15 @@ func TestMountLocalFile(t *testing.T) {
 	require.Nil(t, err)
 }
 
+func TestMountCSVParsesFloatCorrectly(t *testing.T) {
+	// Step 1: fire up the DB
+	ctx := data.NewGremelContext(context.Background())
+
+	// Step 2: create the 'weblogs' table from the logfile
+	err := Mount(ctx, "weblogs", "../test_resources/accounts.csv")
+	require.Nil(t, err)
+}
+
 func TestMountFileUrl(t *testing.T) {
 	// Step 1: fire up the DB
 	ctx := data.NewGremelContext(context.Background())
@@ -101,7 +110,7 @@ func TestMountHttpUrl(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, rows, 1)
 	assert.Equal(t, []string{"id", "fullname", "email"}, columns)
-	assert.Equal(t, "1", rows[0]["id"])
+	assert.Equal(t, int64(1), rows[0]["id"]) // ID should be int64 after proper type inference
 	assert.Equal(t, "Marcellina Benedicto", rows[0]["fullname"])
 	assert.Equal(t, "mbenedicto0@earthlink.net", rows[0]["email"])
 }
