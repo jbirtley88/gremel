@@ -4,9 +4,11 @@ import (
 	"database/sql"
 	"fmt"
 	"math"
+	"reflect"
 	"strings"
 
 	"github.com/jbirtley88/gremel/data"
+	"github.com/jbirtley88/gremel/helper"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -54,34 +56,33 @@ func (db *SQLiteGremelDB) Close() error {
 }
 
 func (db *SQLiteGremelDB) getColumnType(value any) (string, error) {
-	switch v := value.(type) {
-	case int, int32, int64:
+	ct, err := helper.GetColumnType(value)
+	if err != nil {
+		return "", err
+	}
+	switch ct {
+	case reflect.Int, reflect.Int32, reflect.Int64:
 		return "INTEGER", nil
-	case float32:
-		if _, frac := math.Modf(float64(v)); frac == 0 {
+	case reflect.Float32, reflect.Float64:
+		if _, frac := math.Modf(value.(float64)); frac == 0 {
 			return "INTEGER", nil
 		}
 		return "REAL", nil
-	case float64:
-		// if _, frac := math.Modf(v); frac == 0 {
-		// 	return "INTEGER", nil
-		// }
-		return "REAL", nil
-	case bool:
-		return "BOOLEAN", nil
-	case string:
+	case reflect.String:
 		return "TEXT", nil
+	case reflect.Bool:
+		return "BOOLEAN", nil
 	default:
 		return "", fmt.Errorf("unsupported data type: %T", value)
 	}
 }
 
-func (db *SQLiteGremelDB) getCreateTableSQL(tableName string, row data.Row) (string, data.Row, error) {
+func (db *SQLiteGremelDB) getCreateTableSQL(tableName string, columnTypes map[string]reflect.Kind) (string, data.Row, error) {
 	sqlLines := make([]string, 0)
 
 	// Handle empty row case
 	sqlLines = append(sqlLines, fmt.Sprintf("DROP TABLE IF EXISTS %s;", tableName))
-	if len(row) == 0 {
+	if len(columnTypes) == 0 {
 		sqlLines = append(sqlLines, fmt.Sprintf("CREATE TABLE %s (", tableName))
 		sqlLines = append(sqlLines, "    _placeholder INTEGER") // Add a placeholder column for empty tables
 		sqlLines = append(sqlLines, ");")
@@ -92,14 +93,23 @@ func (db *SQLiteGremelDB) getCreateTableSQL(tableName string, row data.Row) (str
 
 	// Collect column definitions first
 	schema := make(data.Row)
-	columns := make([]string, 0, len(row))
-	for fieldName, fieldValue := range row {
-		columnType, err := db.getColumnType(fieldValue)
-		schema[fieldName] = columnType
-		if err != nil {
-			return "", nil, fmt.Errorf("failed to get column type for field %q: %w", fieldName, err)
+	columns := make([]string, 0, len(columnTypes))
+	for fieldName, columnType := range columnTypes {
+		typeName := ""
+		switch columnType {
+		case reflect.Int, reflect.Int32, reflect.Int64:
+			typeName = "INTEGER"
+		case reflect.Float32, reflect.Float64:
+			typeName = "REAL"
+		case reflect.String:
+			typeName = "TEXT"
+		case reflect.Bool:
+			typeName = "BOOLEAN"
+		default:
+			return "", nil, fmt.Errorf("unsupported data type: %v", columnType)
 		}
-		columns = append(columns, fmt.Sprintf("    %s %s", fieldName, columnType))
+		schema[fieldName] = typeName
+		columns = append(columns, fmt.Sprintf("    %s %s", fieldName, typeName))
 	}
 
 	// Join columns with commas and add to SQL lines
@@ -114,9 +124,13 @@ func (db *SQLiteGremelDB) getCreateTableSQL(tableName string, row data.Row) (str
 	return strings.Join(sqlLines, "\n"), schema, nil
 }
 
-func (db *SQLiteGremelDB) CreateSchema(tableName string, row data.Row) error {
-	// Create the accounts table
-	createTableSQL, schema, err := db.getCreateTableSQL(tableName, row)
+func (db *SQLiteGremelDB) CreateSchema(tableName string, rows []data.Row) error {
+	derivedSchema, err := helper.DeriveSchema(rows)
+	if err != nil {
+		return fmt.Errorf("CreateSchema(%s): failed to derive schema: %w", tableName, err)
+	}
+
+	createTableSQL, schema, err := db.getCreateTableSQL(tableName, derivedSchema)
 	if err != nil {
 		return fmt.Errorf("CreateSchema(%s): failed to generate CREATE TABLE SQL: %w", tableName, err)
 	}

@@ -5,7 +5,7 @@ import (
 )
 
 type GremelDB interface {
-	CreateSchema(tableName string, row data.Row) error
+	CreateSchema(tableName string, rows []data.Row) error
 	DropSchema(tableName string) error
 	// Support for the '.schema' command
 	GetSchema(tableName string) (data.Row, error)

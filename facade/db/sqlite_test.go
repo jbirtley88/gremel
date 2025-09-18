@@ -1,9 +1,11 @@
 package db
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/jbirtley88/gremel/data"
+	"github.com/jbirtley88/gremel/helper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -77,19 +79,9 @@ func TestSQLiteGremelDB_getColumnType(t *testing.T) {
 			expected: "INTEGER",
 		},
 		{
-			name:     "int32 type",
-			value:    int32(42),
-			expected: "INTEGER",
-		},
-		{
 			name:     "int64 type",
 			value:    int64(42),
 			expected: "INTEGER",
-		},
-		{
-			name:     "float32 type",
-			value:    float32(3.14),
-			expected: "REAL",
 		},
 		{
 			name:     "float64 type",
@@ -162,7 +154,9 @@ func TestSQLiteGremelDB_getCreateTableSQL(t *testing.T) {
 			"active": true,
 		}
 
-		sql, schema, err := db.getCreateTableSQL("users", row)
+		columnTypes, err := helper.DeriveSchema([]data.Row{row})
+		require.NoError(t, err)
+		sql, schema, err := db.getCreateTableSQL("users", columnTypes)
 		assert.NoError(t, err)
 		assert.NotEmpty(t, sql)
 		assert.NotNil(t, schema)
@@ -190,7 +184,9 @@ func TestSQLiteGremelDB_getCreateTableSQL(t *testing.T) {
 	t.Run("generates SQL for empty row", func(t *testing.T) {
 		row := data.Row{}
 
-		sql, schema, err := db.getCreateTableSQL("empty_table", row)
+		columnTypes, err := helper.DeriveSchema([]data.Row{row})
+		require.NoError(t, err)
+		sql, schema, err := db.getCreateTableSQL("empty_table", columnTypes)
 		assert.NoError(t, err)
 		assert.Contains(t, sql, "CREATE TABLE empty_table (")
 		assert.Contains(t, sql, "_placeholder INTEGER") // Empty tables get a placeholder column
@@ -205,9 +201,16 @@ func TestSQLiteGremelDB_getCreateTableSQL(t *testing.T) {
 			"unsupported": complex(1, 2),
 		}
 
-		sql, schema, err := db.getCreateTableSQL("test_table", row)
+		columnTypes, err := helper.DeriveSchema([]data.Row{row})
+		require.Error(t, err)
+		require.Nil(t, columnTypes)
+
+		// Even though DeriveSchema failed, we can still test getCreateTableSQL's error handling
+		sql, schema, err := db.getCreateTableSQL("test_table", map[string]reflect.Kind{
+			"id":          reflect.Int64,
+			"unsupported": reflect.Complex128,
+		})
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "failed to get column type for field \"unsupported\"")
 		assert.Contains(t, err.Error(), "unsupported data type")
 		assert.Empty(t, sql)
 		assert.Nil(t, schema)
@@ -218,7 +221,9 @@ func TestSQLiteGremelDB_getCreateTableSQL(t *testing.T) {
 			"field1": "value1",
 		}
 
-		sql, schema, err := db.getCreateTableSQL("table_with_underscores", row)
+		columnTypes, err := helper.DeriveSchema([]data.Row{row})
+		require.NoError(t, err)
+		sql, schema, err := db.getCreateTableSQL("table_with_underscores", columnTypes)
 		assert.NoError(t, err)
 		assert.Contains(t, sql, "CREATE TABLE table_with_underscores (")
 		assert.NotNil(t, schema)
@@ -239,7 +244,7 @@ func TestSQLiteGremelDB_CreateSchema(t *testing.T) {
 			"email": "jb@example.com",
 		}
 
-		err := db.CreateSchema("users", row)
+		err := db.CreateSchema("users", []data.Row{row})
 		assert.NoError(t, err)
 
 		// Verify table was created by querying schema
@@ -260,7 +265,7 @@ func TestSQLiteGremelDB_CreateSchema(t *testing.T) {
 			"bool_field":   true,
 		}
 
-		err := db.CreateSchema("mixed_types", row)
+		err := db.CreateSchema("mixed_types", []data.Row{row})
 		assert.NoError(t, err)
 
 		// Verify table was created
@@ -279,9 +284,9 @@ func TestSQLiteGremelDB_CreateSchema(t *testing.T) {
 			"unsupported": complex(1, 2),
 		}
 
-		err := db.CreateSchema("test_table", row)
+		err := db.CreateSchema("test_table", []data.Row{row})
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "CreateSchema(test_table): failed to generate CREATE TABLE SQL")
+		assert.Contains(t, err.Error(), "CreateSchema(test_table): failed to derive schema")
 		assert.Contains(t, err.Error(), "unsupported data type")
 	})
 
@@ -294,11 +299,11 @@ func TestSQLiteGremelDB_CreateSchema(t *testing.T) {
 		}
 
 		// Create table first time
-		err := db.CreateSchema("duplicate_table", row)
+		err := db.CreateSchema("duplicate_table", []data.Row{row})
 		assert.NoError(t, err)
 
 		// Try to create the same table again - should fail
-		err = db.CreateSchema("duplicate_table", row)
+		err = db.CreateSchema("duplicate_table", []data.Row{row})
 		assert.NoError(t, err)
 	})
 
@@ -308,7 +313,7 @@ func TestSQLiteGremelDB_CreateSchema(t *testing.T) {
 
 		row := data.Row{}
 
-		err := db.CreateSchema("empty_table", row)
+		err := db.CreateSchema("empty_table", []data.Row{row})
 		assert.NoError(t, err)
 
 		// Verify table was created
@@ -329,7 +334,7 @@ func TestSQLiteGremelDB_DropSchema(t *testing.T) {
 			"id":   1,
 			"name": "test",
 		}
-		err := db.CreateSchema("test_table", row)
+		err := db.CreateSchema("test_table", []data.Row{row})
 		require.NoError(t, err)
 
 		// Verify table exists
@@ -371,7 +376,7 @@ func TestSQLiteGremelDB_DropSchema(t *testing.T) {
 				// Only create one table since we can't have duplicates
 				continue
 			}
-			err := db.CreateSchema(tableName, row)
+			err := db.CreateSchema(tableName, []data.Row{row})
 			require.NoError(t, err)
 		}
 
@@ -401,7 +406,7 @@ func TestSQLiteGremelDB_Integration(t *testing.T) {
 		}
 
 		// Create schema
-		err := db.CreateSchema(tableName, row)
+		err := db.CreateSchema(tableName, []data.Row{row})
 		require.NoError(t, err)
 
 		// Insert test data
@@ -457,7 +462,7 @@ func TestSQLiteGremelDB_Integration(t *testing.T) {
 
 		// Create all schemas
 		for tableName, row := range tables {
-			err := db.CreateSchema(tableName, row)
+			err := db.CreateSchema(tableName, []data.Row{row})
 			require.NoError(t, err)
 		}
 

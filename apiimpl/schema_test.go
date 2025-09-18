@@ -26,7 +26,7 @@ func TestGetSchema_ValidTable(t *testing.T) {
 	_ = database.DropSchema(tableName)
 
 	// Create a test table with schema
-	err := database.CreateSchema(tableName, sampleRow)
+	err := database.CreateSchema(tableName, []data.Row{sampleRow})
 	assert.NoError(t, err)
 
 	// Test GetSchema
@@ -100,7 +100,7 @@ func TestGetSchema_MultipleFieldTypes(t *testing.T) {
 	_ = database.DropSchema(tableName)
 
 	// Create a test table with various field types
-	err := database.CreateSchema(tableName, sampleRow)
+	err := database.CreateSchema(tableName, []data.Row{sampleRow})
 	assert.NoError(t, err)
 
 	// Test GetSchema
@@ -135,7 +135,7 @@ func TestGetSchema_SchemaContent(t *testing.T) {
 
 	// Clean up and create table
 	_ = database.DropSchema(tableName)
-	err := database.CreateSchema(tableName, sampleRow)
+	err := database.CreateSchema(tableName, []data.Row{sampleRow})
 	assert.NoError(t, err)
 
 	// Test GetSchema
@@ -189,7 +189,7 @@ func TestGetSchema_ContextParameter(t *testing.T) {
 
 	// Clean up and create table
 	_ = database.DropSchema(tableName)
-	err := database.CreateSchema(tableName, sampleRow)
+	err := database.CreateSchema(tableName, []data.Row{sampleRow})
 	assert.NoError(t, err)
 
 	// Test with nil context (though not recommended in practice)
@@ -216,7 +216,7 @@ func TestGetSchema_ReturnType(t *testing.T) {
 
 	// Clean up and create table
 	_ = database.DropSchema(tableName)
-	err := database.CreateSchema(tableName, sampleRow)
+	err := database.CreateSchema(tableName, []data.Row{sampleRow})
 	assert.NoError(t, err)
 
 	// Test return type
@@ -245,7 +245,7 @@ func TestGetSchema_ConsistencyAcrossMultipleCalls(t *testing.T) {
 
 	// Clean up and create table
 	_ = database.DropSchema(tableName)
-	err := database.CreateSchema(tableName, sampleRow)
+	err := database.CreateSchema(tableName, []data.Row{sampleRow})
 	assert.NoError(t, err)
 
 	// Call GetSchema multiple times

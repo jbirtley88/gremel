@@ -12,7 +12,7 @@ func NewErrorGremelDB(err error) GremelDB {
 	}
 }
 
-func (db *ErrorGremelDB) CreateSchema(tableName string, row data.Row) error {
+func (db *ErrorGremelDB) CreateSchema(tableName string, rows []data.Row) error {
 	return db.underlyingError
 }
 

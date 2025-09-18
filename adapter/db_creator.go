@@ -1,6 +1,7 @@
 package adapter
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -48,7 +49,11 @@ func CreateTableFromFile(ctx data.GremelContext, database db.GremelDB, tableName
 }
 
 func CreateTableFromReader(ctx data.GremelContext, database db.GremelDB, tableName string, input io.Reader, parser data.Parser) error {
-	rows, err := parser.Parse(input)
+	inputBytes, err := io.ReadAll(input)
+	if err != nil {
+		return fmt.Errorf("CreateDBFromReader(%s): failed to read input: %w", tableName, err)
+	}
+	rows, err := parser.Parse(bytes.NewBuffer(inputBytes))
 	if err != nil {
 		return fmt.Errorf("CreateDBFromReader(%s): failed to parse data: %w", tableName, err)
 	}
@@ -59,9 +64,8 @@ func CreateTableFromReader(ctx data.GremelContext, database db.GremelDB, tableNa
 		return fmt.Errorf("CreateDBFromReader(%s): no data rows found", tableName)
 	}
 
-	// Make sure that we don't already have a table of this name
-
-	err = database.CreateSchema(tableName, rows.Rows[0])
+	// TODO(john): Make sure that we don't already have a table of this name
+	err = database.CreateSchema(tableName, rows.Rows)
 	if err != nil {
 		return fmt.Errorf("CreateDBFromReader(%s): failed to create schema: %w", tableName, err)
 	}

@@ -50,7 +50,7 @@ func TestGetTables_WithSampleTables(t *testing.T) {
 
 	// Create test tables
 	for _, tableName := range testTables {
-		err := database.CreateSchema(tableName, sampleRow)
+		err := database.CreateSchema(tableName, []data.Row{sampleRow})
 		assert.NoError(t, err, "Failed to create test table %s", tableName)
 	}
 
@@ -88,7 +88,7 @@ func TestGetTables_AfterDropTable(t *testing.T) {
 	_ = database.DropSchema(tableName)
 
 	// Create a test table
-	err := database.CreateSchema(tableName, sampleRow)
+	err := database.CreateSchema(tableName, []data.Row{sampleRow})
 	assert.NoError(t, err)
 
 	// Verify table exists

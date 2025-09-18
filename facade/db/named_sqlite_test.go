@@ -40,11 +40,11 @@ func TestNamedSQLiteGremelDB_SeparateDatabases(t *testing.T) {
 	}
 
 	// Create schema in db1
-	err := db1.CreateSchema("users", sampleRow1)
+	err := db1.CreateSchema("users", []data.Row{sampleRow1})
 	require.NoError(t, err, "Failed to create schema in db1")
 
 	// Create schema in db2
-	err = db2.CreateSchema("products", sampleRow2)
+	err = db2.CreateSchema("products", []data.Row{sampleRow2})
 	require.NoError(t, err, "Failed to create schema in db2")
 
 	// Insert data into db1
@@ -89,7 +89,7 @@ func TestNamedSQLiteGremelDB_SameName_SeparateInstances(t *testing.T) {
 
 	// Create schema in db1
 	sampleRow := data.Row{"id": 1, "name": "test"}
-	err := db1.CreateSchema("shared_table", sampleRow)
+	err := db1.CreateSchema("shared_table", []data.Row{sampleRow})
 	require.NoError(t, err, "Failed to create schema in db1")
 
 	// Insert data via db1
@@ -120,10 +120,10 @@ func TestNamedSQLiteGremelDB_DifferentNames_CompleteSeparation(t *testing.T) {
 	// Create same table name in both databases with same structure
 	sampleRow := data.Row{"id": 1, "data": "test"}
 
-	err := dbA.CreateSchema("common_table", sampleRow)
+	err := dbA.CreateSchema("common_table", []data.Row{sampleRow})
 	require.NoError(t, err, "Failed to create schema in dbA")
 
-	err = dbB.CreateSchema("common_table", sampleRow)
+	err = dbB.CreateSchema("common_table", []data.Row{sampleRow})
 	require.NoError(t, err, "Failed to create schema in dbB")
 
 	// Insert different data into each
